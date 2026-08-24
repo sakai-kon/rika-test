@@ -11,6 +11,8 @@
   let questionIndex = 0;
   let correct = 0;
   let mistakes = [];
+  let glossarySubject = 'all';
+  let glossaryUnit = 'all';
 
   const $ = (id) => document.getElementById(id);
   const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
@@ -32,6 +34,10 @@
       (subject === 'all' || question.subject === subject) &&
       (unit === 'all' || question.unit === unit)
     );
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
   }
 
   function renderHome() {
@@ -83,59 +89,104 @@
     showScreen('unitScreen');
   }
 
-  function renderGlossaryControls() {
-    const subjectSelect = $('glossarySubject');
-    const unitSelect = $('glossaryUnit');
-    subjectSelect.innerHTML = '<option value="all">五教科すべて</option>';
-    Object.entries(SUBJECTS).forEach(([key, subject]) => {
-      subjectSelect.insertAdjacentHTML('beforeend', `<option value="${key}">${subject.icon} ${subject.name}</option>`);
-    });
-    subjectSelect.value = 'all';
-    updateGlossaryUnits();
+  function openGlossaryPage(subject = 'all', unit = 'all') {
+    glossarySubject = subject;
+    glossaryUnit = unit;
+    renderGlossaryStage();
+    showScreen('glossaryScreen');
   }
 
-  function updateGlossaryUnits() {
-    const subject = $('glossarySubject').value;
-    const unitSelect = $('glossaryUnit');
-    unitSelect.innerHTML = '<option value="all">すべての単元</option>';
-    if (subject === 'all') return;
-    SUBJECTS[subject].units.forEach((unit) => {
-      unitSelect.insertAdjacentHTML('beforeend', `<option value="${unit.id}">${unit.icon} ${unit.name}</option>`);
-    });
+  function renderGlossaryStage() {
+    const subjectGrid = $('glossarySubjectGrid');
+    const unitGrid = $('glossaryUnitGrid');
+    const listWrap = $('glossaryListWrap');
+    const title = $('glossaryTitle');
+    const subtitle = $('glossarySubtitle');
+    const breadcrumb = $('glossaryBreadcrumb');
+    const back = $('glossaryBack');
+
+    subjectGrid.classList.add('hidden');
+    unitGrid.classList.add('hidden');
+    listWrap.classList.add('hidden');
+
+    if (glossarySubject === 'all') {
+      title.textContent = '📘 用語・解説';
+      subtitle.textContent = 'まず教科を選んでください。';
+      breadcrumb.textContent = '用語・解説';
+      back.textContent = '← 教科一覧';
+      back.onclick = () => showScreen('homeScreen');
+      subjectGrid.classList.remove('hidden');
+      subjectGrid.innerHTML = '';
+      Object.entries(SUBJECTS).forEach(([key, subject]) => {
+        const terms = GLOSSARY.filter((item) => item.subject === key);
+        const button = document.createElement('button');
+        button.className = 'glossary-subject-card';
+        button.innerHTML = `<span>${subject.icon}</span><div><b>${subject.name}</b><small>${subject.units.length}単元 ・ ${terms.length}語</small></div>`;
+        button.onclick = () => { glossarySubject = key; glossaryUnit = 'all'; renderGlossaryStage(); };
+        subjectGrid.appendChild(button);
+      });
+      return;
+    }
+
+    const subject = SUBJECTS[glossarySubject];
+    if (glossaryUnit === 'all') {
+      title.textContent = `${subject.icon} ${subject.name}の用語・解説`;
+      subtitle.textContent = '次に単元を選んでください。';
+      breadcrumb.textContent = `用語・解説 / ${subject.name}`;
+      back.textContent = '← 教科';
+      back.onclick = () => { glossarySubject = 'all'; renderGlossaryStage(); };
+      unitGrid.classList.remove('hidden');
+      unitGrid.innerHTML = '';
+      subject.units.forEach((unit) => {
+        const count = GLOSSARY.filter((item) => item.subject === glossarySubject && item.unit === unit.id).length;
+        const button = document.createElement('button');
+        button.className = 'glossary-unit-card';
+        button.innerHTML = `<span>${unit.icon}</span><div><b>${unit.name}</b><small>${count}語</small></div>`;
+        button.onclick = () => { glossaryUnit = unit.id; renderGlossaryStage(); };
+        unitGrid.appendChild(button);
+      });
+      return;
+    }
+
+    const unitName = getUnitName(glossarySubject, glossaryUnit);
+    title.textContent = `📘 ${unitName}`;
+    subtitle.textContent = '用語を選ぶと詳しい解説を確認できます。';
+    breadcrumb.textContent = `用語・解説 / ${subject.name} / ${unitName}`;
+    back.textContent = '← 単元';
+    back.onclick = () => { glossaryUnit = 'all'; renderGlossaryStage(); };
+    listWrap.classList.remove('hidden');
+    $('glossarySearch').value = '';
+    renderGlossaryList();
   }
 
-  function renderGlossary() {
-    const subject = $('glossarySubject').value;
-    const unit = $('glossaryUnit').value;
-    const search = $('glossarySearch').value.trim().toLowerCase();
-
+  function renderGlossaryList() {
     const filtered = GLOSSARY.filter((item) => {
-      const subjectMatch = subject === 'all' || item.subject === subject;
-      const unitMatch = unit === 'all' || item.unit === unit;
+      if (item.subject !== glossarySubject || item.unit !== glossaryUnit) return false;
+      const search = $('glossarySearch').value.trim().toLowerCase();
+      if (!search) return true;
       const text = `${item.term} ${item.reading} ${item.summary} ${item.detail}`.toLowerCase();
-      return subjectMatch && unitMatch && (!search || text.includes(search));
+      return text.includes(search);
     });
 
     $('glossaryCount').textContent = `${filtered.length}語を表示`;
     const list = $('glossaryList');
-    if (!filtered.length) {
-      list.innerHTML = '<div class="empty-state">条件に合う用語がありません。</div>';
-      return;
-    }
+    list.innerHTML = filtered.length
+      ? filtered.map((item, index) => `<button class="glossary-term-card" data-index="${index}"><span class="term-title">${escapeHtml(item.term)}</span><span class="reading">${escapeHtml(item.reading)}</span><span class="term-summary">${escapeHtml(item.summary)}</span></button>`).join('')
+      : '<div class="empty-state">この条件に合う用語がありません。</div>';
 
-    list.innerHTML = filtered.map((item) => `
-      <article class="glossary-item">
-        <div class="glossary-item-head">
-          <div><h3>${escapeHtml(item.term)}</h3><span class="reading">${escapeHtml(item.reading)}</span></div>
-          <span class="glossary-badge">${escapeHtml(subjectNames[item.subject])}・${escapeHtml(getUnitName(item.subject, item.unit))}</span>
-        </div>
-        <p class="glossary-summary">${escapeHtml(item.summary)}</p>
-        <p class="glossary-detail">${escapeHtml(item.detail)}</p>
-      </article>`).join('');
+    list.querySelectorAll('.glossary-term-card').forEach((button, index) => {
+      button.onclick = () => {
+        const items = filtered;
+        showTermDetailFromPage(items[index]);
+      };
+    });
   }
 
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>'"]/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+  function showTermDetailFromPage(term) {
+    const previous = $('glossaryList').innerHTML;
+    const list = $('glossaryList');
+    list.innerHTML = `<article class="glossary-detail-page"><button id="termDetailBack" class="ghost">← 用語一覧</button><div class="glossary-badge">${escapeHtml(subjectNames[term.subject])}・${escapeHtml(getUnitName(term.subject, term.unit))}</div><h3>${escapeHtml(term.term)}</h3><span class="reading">${escapeHtml(term.reading)}</span><h4>意味</h4><p>${escapeHtml(term.summary)}</p><h4>詳しい解説</h4><p>${escapeHtml(term.detail)}</p></article>`;
+    $('termDetailBack').onclick = () => { list.innerHTML = previous; renderGlossaryList(); };
   }
 
   function getRelevantTerms(question) {
@@ -150,7 +201,7 @@
     $('termPanel').innerHTML = terms.length
       ? `<div class="term-panel-title">この単元の重要用語</div>${terms.map((term) => `<button class="inline-term" data-term="${escapeHtml(term.term)}"><b>${escapeHtml(term.term)}</b><span>${escapeHtml(term.summary)}</span></button>`).join('')}`
       : '<div class="term-panel-title">この単元の用語解説は用語ページで確認できます。</div>';
-    $('hintPanel').innerHTML = `<b>学習ポイント</b><p>${escapeHtml(question.e)}</p><a href="#" id="openAllGlossaryFromHint">📘 用語ページで詳しく見る</a>`;
+    $('hintPanel').innerHTML = `<b>学習ポイント</b><p>${escapeHtml(question.e)}</p><a href="#" id="openAllGlossaryFromHint">📘 この単元の用語ページを開く</a>`;
     $('termPanel').classList.add('hidden');
     $('hintPanel').classList.add('hidden');
 
@@ -168,16 +219,6 @@
     panel.innerHTML = `<div class="term-detail-view"><button id="closeTermDetail" class="mini-close">×</button><div class="glossary-badge">${escapeHtml(subjectNames[term.subject])}・${escapeHtml(getUnitName(term.subject, term.unit))}</div><h3>${escapeHtml(term.term)}</h3><span class="reading">${escapeHtml(term.reading)}</span><p><b>意味：</b>${escapeHtml(term.summary)}</p><p><b>詳しく：</b>${escapeHtml(term.detail)}</p></div>`;
     panel.classList.remove('hidden');
     $('closeTermDetail').onclick = () => renderProblemLearningTools(quiz[questionIndex]);
-  }
-
-  function openGlossaryPage(subject = 'all', unit = 'all') {
-    renderGlossaryControls();
-    $('glossarySubject').value = subject;
-    updateGlossaryUnits();
-    $('glossaryUnit').value = unit;
-    $('glossarySearch').value = '';
-    renderGlossary();
-    showScreen('glossaryScreen');
   }
 
   function startQuiz(subject, unit) {
@@ -199,7 +240,6 @@
   function renderQuestion() {
     const question = quiz[questionIndex];
     if (!question) return;
-
     $('categoryLabel').textContent = subjectKey === 'all' ? '五教科総合' : SUBJECTS[subjectKey].name;
     $('questionNo').textContent = ` ${questionIndex + 1} / ${quiz.length}`;
     $('scoreLive').textContent = `${correct}問正解`;
@@ -230,10 +270,8 @@
       if (button.textContent === answerText) button.classList.add('correct');
       if (!isCorrect && button === selectedButton) button.classList.add('wrong');
     });
-
     if (isCorrect) correct += 1;
     else mistakes.push({ ...question, answerText });
-
     $('scoreLive').textContent = `${correct}問正解`;
     const feedback = $('feedback');
     feedback.className = `feedback ${isCorrect ? 'good' : 'bad'}`;
@@ -248,7 +286,6 @@
     const score = Math.round((correct / quiz.length) * 100);
     const name = subjectKey === 'all' ? '五教科総合' : SUBJECTS[subjectKey].name;
     const unitName = subjectKey === 'all' ? '' : ` / ${getUnitName(subjectKey, unitKey)}`;
-
     $('resultScore').textContent = score;
     $('scoreRing').style.setProperty('--score', `${score}%`);
     $('correctCount').textContent = correct;
@@ -282,10 +319,8 @@
     $('startAll').onclick = () => startQuiz('all', 'all');
     $('backHome').onclick = () => showScreen('homeScreen');
     $('openGlossary').onclick = () => openGlossaryPage();
-    $('glossaryHome').onclick = () => showScreen('homeScreen');
-    $('glossarySubject').onchange = () => { updateGlossaryUnits(); renderGlossary(); };
-    $('glossaryUnit').onchange = renderGlossary;
-    $('glossarySearch').oninput = renderGlossary;
+    $('glossaryBack').onclick = () => showScreen('homeScreen');
+    $('glossarySearch').oninput = renderGlossaryList;
     $('showTermsButton').onclick = () => {
       $('termPanel').classList.toggle('hidden');
       $('hintPanel').classList.add('hidden');
@@ -298,9 +333,7 @@
       if (questionIndex + 1 < quiz.length) {
         questionIndex += 1;
         renderQuestion();
-      } else {
-        finishQuiz();
-      }
+      } else finishQuiz();
     };
     $('quitButton').onclick = () => showScreen(subjectKey === 'all' ? 'homeScreen' : 'unitScreen');
     $('retryButton').onclick = () => startQuiz(subjectKey, unitKey);
@@ -311,8 +344,6 @@
     showScreen('homeScreen');
     renderHome();
     renderBestScore();
-    renderGlossaryControls();
-    renderGlossary();
     bindEvents();
   }
 
