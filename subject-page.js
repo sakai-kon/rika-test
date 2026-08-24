@@ -9,10 +9,51 @@
   let correct = 0;
   let mistakes = [];
 
+  const PROGRESS_KEY = 'rikaTestProgressV1';
   const $ = id => document.getElementById(id);
   const shuffle = a => [...a].sort(() => Math.random() - 0.5);
   const unitName = id => id === 'all' ? '全単元' : data.units.find(u => u.id === id)?.name || '単元';
   const escapeHtml = s => String(s).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+
+  function saveProgress() {
+    try {
+      if (!quiz.length || index >= quiz.length) return;
+      const payload = {
+        subject,
+        unit,
+        quizIds: quiz.map(q => q.id),
+        index,
+        correct,
+        mistakes: mistakes.map(q => ({ id: q.id, answerText: q.answerText })),
+        savedAt: Date.now()
+      };
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(payload));
+    } catch (_) {}
+  }
+
+  function clearProgress() {
+    try { localStorage.removeItem(PROGRESS_KEY); } catch (_) {}
+  }
+
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(PROGRESS_KEY);
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      if (!p || p.subject !== subject || !Array.isArray(p.quizIds) || !p.quizIds.length) return null;
+      const byId = new Map(questions.map(q => [q.id, q]));
+      const restoredQuiz = p.quizIds.map(id => byId.get(id)).filter(Boolean);
+      if (restoredQuiz.length !== p.quizIds.length) return null;
+      if (!Number.isInteger(p.index) || p.index < 0 || p.index >= restoredQuiz.length) return null;
+      return {
+        unit: p.unit || 'all',
+        quiz: restoredQuiz,
+        index: p.index,
+        correct: Number.isInteger(p.correct) ? p.correct : 0,
+        mistakes: Array.isArray(p.mistakes) ? p.mistakes.map(m => ({ ...(byId.get(m.id) || {}), answerText: m.answerText })).filter(m => m.id) : []
+      };
+    } catch (_) { return null; }
+  }
 
   function show(id) {
     document.querySelectorAll('.page-screen').forEach(x => x.classList.remove('active'));
@@ -47,19 +88,35 @@
     if (!pool.length) return;
     quiz = shuffle(pool).slice(0, Math.min(15, pool.length));
     index = 0; correct = 0; mistakes = [];
+    saveProgress();
     show('quizScreen');
     renderQuestion();
   }
 
+  function resumeQuiz() {
+    const saved = loadProgress();
+    if (!saved) return false;
+    unit = saved.unit;
+    quiz = saved.quiz;
+    index = saved.index;
+    correct = saved.correct;
+    mistakes = saved.mistakes;
+    show('quizScreen');
+    renderQuestion();
+    return true;
+  }
+
   function renderQuestion() {
     const q = quiz[index];
-    $('quizUnit').textContent = unitName(q.unit);
+    if (!q) return;
+    $('quizUnitTop').textContent = unitName(q.unit);
     $('quizNo').textContent = `${index + 1} / ${quiz.length}`;
     $('quizScore').textContent = `${correct}問正解`;
     $('quizProgress').style.width = `${index / quiz.length * 100}%`;
     $('quizDifficulty').textContent = q.difficulty;
     $('quizText').textContent = q.q;
-    $('termPanel').innerHTML = getTerms(q).length ? `<b>📘 この単元の重要用語</b>${getTerms(q).map(t => `<button class="inline-term" data-term="${escapeHtml(t[2])}"><b>${escapeHtml(t[2])}</b><span>${escapeHtml(t[4])}</span></button>`).join('')}` : '<b>📘 用語解説</b><p>この単元の用語は用語解説ページで確認できます。</p>';
+    const terms = getTerms(q);
+    $('termPanel').innerHTML = terms.length ? `<b>📘 この単元の重要用語</b>${terms.map(t => `<button class="inline-term" data-term="${escapeHtml(t[2])}"><b>${escapeHtml(t[2])}</b><span>${escapeHtml(t[4])}</span></button>`).join('')}` : '<b>📘 用語解説</b><p>この単元の用語は用語解説ページで確認できます。</p>';
     $('termPanel').classList.add('hidden');
     $('hintPanel').classList.add('hidden');
     $('feedback').classList.add('hidden');
@@ -90,29 +147,37 @@
     $('quizScore').textContent = `${correct}問正解`;
     $('feedback').className = `feedback ${ok ? 'good' : 'bad'}`;
     $('feedback').innerHTML = `<b>${ok ? '正解！' : '不正解。'}</b> ${escapeHtml(q.e)} <button id="feedbackGlossary" class="inline-link-button">📘 この単元の用語を見る</button>`;
-    $('feedbackGlossary').onclick = () => location.href = `glossary.html?subject=${subject}&unit=${q.unit}`;
+    $('feedbackGlossary').onclick = () => location.href = `glossary.html?subject=${encodeURIComponent(subject)}&unit=${encodeURIComponent(q.unit)}`;
     $('nextButton').disabled = false;
+    saveProgress();
   }
 
   function finish() {
+    clearProgress();
     const score = Math.round(correct / quiz.length * 100);
     $('resultScore').textContent = score;
     $('resultSummary').textContent = `${data.name}・${unitName(unit)}で ${correct} / ${quiz.length}問正解`;
-    $('mistakeReview').innerHTML = mistakes.length ? `<h3>間違えた問題 ${mistakes.length}問</h3>${mistakes.map(q => `<div class="review-item"><div class="q">${escapeHtml(q.q)}</div><div class="a">正解：${escapeHtml(q.answerText)}<br>${escapeHtml(q.e)}</div></div>`).join('')}` : '<h3>全問正解！🎉</h3><p>この単元はかなり仕上がっています。</p>';
+    $('mistakeReview').innerHTML = mistakes.length ? `<h3>間違えた問題 ${mistakes.length}問</h3>${mistakes.map(q => `<div class="review-item"><div class="q">${escapeHtml(q.q)}</div><div class="a">正解：${escapeHtml(q.answerText)}<br>${escapeHtml(q.e)}<br><button class="inline-link-button" onclick="location.href='glossary.html?subject=${encodeURIComponent(subject)}&unit=${encodeURIComponent(q.unit)}'">📘 この単元の用語を復習</button></div></div>`).join('')}` : '<h3>全問正解！🎉</h3><p>この単元はかなり仕上がっています。</p>';
     show('resultScreen');
   }
 
   $('backHome').onclick = () => location.href = 'index.html';
-  $('homeFromQuiz').onclick = () => location.href = 'index.html';
-  $('nextButton').onclick = () => index + 1 < quiz.length ? (index++, renderQuestion()) : finish();
-  $('quitQuiz').onclick = () => show('unitScreen');
+  $('nextButton').onclick = () => {
+    if (index + 1 < quiz.length) {
+      index++;
+      saveProgress();
+      renderQuestion();
+    } else finish();
+  };
+  $('quitQuiz').onclick = () => { saveProgress(); show('unitScreen'); };
   $('retryQuiz').onclick = () => startQuiz(unit);
   $('resultHome').onclick = () => location.href = 'index.html';
   $('showTerms').onclick = () => { $('termPanel').classList.toggle('hidden'); $('hintPanel').classList.add('hidden'); };
   $('showHint').onclick = () => { $('hintPanel').classList.toggle('hidden'); $('termPanel').classList.add('hidden'); };
-  $('openGlossary').onclick = () => location.href = `glossary.html?subject=${subject}`;
+  $('openGlossary').onclick = () => location.href = `glossary.html?subject=${encodeURIComponent(subject)}`;
   $('hintPanel').innerHTML = '<b>💡 学習ポイント</b><p>問題文を読み、単元の基本用語と結びつけて考えよう。詳しい用語は「用語・解説」から確認できます。</p>';
 
   renderUnits();
-  show('unitScreen');
+  const autoResume = new URLSearchParams(location.search).get('resume') === '1';
+  if (autoResume) resumeQuiz(); else show('unitScreen');
 })();
