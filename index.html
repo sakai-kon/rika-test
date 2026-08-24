@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>中1 五教科クエスト</title>
-<link rel="stylesheet" href="style.css?v=20260824-3">
+<link rel="stylesheet" href="style.css?v=20260824-4">
 </head>
 <body>
 <main class="app">
@@ -27,7 +27,7 @@
     </div>
     <div id="subjectGrid" class="subject-grid"></div>
     <div class="home-tools">
-      <button id="openGlossary" class="tool-card"><span>📘</span><b>用語・解説</b><small>中1で出てくる重要語を教科・単元ごとに確認</small></button>
+      <button id="openGlossary" class="tool-card"><span>📘</span><b>用語・解説</b><small>教科 → 単元 → 用語の順に開いて確認</small></button>
     </div>
     <div class="features"><span>✓ 中1主要単元</span><span>✓ 大量の問題バンク</span><span>✓ 単元別ランダム出題</span><span>✓ 問題中の用語解説</span></div>
     <button id="startAll" class="primary wide">🎯 五教科総合から始める</button>
@@ -47,16 +47,19 @@
 <section id="glossaryScreen" class="screen">
   <div class="card glossary-card">
     <div class="glossary-head">
-      <button id="glossaryHome" class="ghost">← 教科一覧</button>
-      <div><h2>📘 用語・解説</h2><p>教科・単元を選んで重要語をまとめて確認できます。</p></div>
+      <button id="glossaryBack" class="ghost">← 戻る</button>
+      <div><h2 id="glossaryTitle">📘 用語・解説</h2><p id="glossarySubtitle">教科から選んでください。</p></div>
     </div>
-    <div class="glossary-controls">
-      <select id="glossarySubject"><option value="all">五教科すべて</option></select>
-      <select id="glossaryUnit"><option value="all">すべての単元</option></select>
-      <input id="glossarySearch" type="search" placeholder="用語・読み・説明を検索">
+    <div id="glossaryBreadcrumb" class="glossary-breadcrumb"></div>
+    <div id="glossarySubjectGrid" class="glossary-subject-grid"></div>
+    <div id="glossaryUnitGrid" class="glossary-unit-grid hidden"></div>
+    <div id="glossaryListWrap" class="hidden">
+      <div class="glossary-controls">
+        <input id="glossarySearch" type="search" placeholder="用語・読み・説明を検索">
+      </div>
+      <div id="glossaryCount" class="glossary-count"></div>
+      <div id="glossaryList" class="glossary-list"></div>
     </div>
-    <div id="glossaryCount" class="glossary-count"></div>
-    <div id="glossaryList" class="glossary-list"></div>
   </div>
 </section>
 
@@ -93,11 +96,11 @@
   </div>
 </section>
 </main>
-<script src="quiz-data.js?v=20260824-3"></script>
-<script src="data-bridge.js?v=20260824-3"></script>
-<script src="question-bank.js?v=20260824-3"></script>
-<script src="question-bank-fix.js?v=20260824-3"></script>
-<script src="glossary-data.js?v=20260824-3"></script>
-<script src="script.js?v=20260824-3"></script>
+<script src="quiz-data.js?v=20260824-4"></script>
+<script src="data-bridge.js?v=20260824-4"></script>
+<script src="question-bank.js?v=20260824-4"></script>
+<script src="question-bank-fix.js?v=20260824-4"></script>
+<script src="glossary-data.js?v=20260824-4"></script>
+<script src="script.js?v=20260824-4"></script>
 </body>
 </html>
