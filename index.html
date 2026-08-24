@@ -1,18 +1,69 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>中1 五教科クエスト</title><link rel="stylesheet" href="style.css">
-</head><body><main class="app">
-<header class="hero"><div><p class="eyebrow">JUNIOR HIGH 1 · FIVE SUBJECTS</p><h1>📚 中1 五教科クエスト</h1><p class="lead">国語・数学・理科・社会・英語から選んで、中学1年生の内容をクイズで復習しよう。</p></div><div class="best-score" id="bestScore">最高得点：—</div></header>
-<section id="homeScreen" class="screen active"><div class="card intro"><h2>教科を選ぼう</h2><div class="mode-grid">
-<button class="mode-card" data-mode="all"><span>🎯</span><b>五教科総合</b><small>5教科からランダム出題</small></button>
-<button class="mode-card" data-mode="japanese"><span>📖</span><b>国語</b><small>漢字・文法・古文・読解の基礎</small></button>
-<button class="mode-card" data-mode="math"><span>📐</span><b>数学</b><small>正負の数・文字式・方程式・比例反比例</small></button>
-<button class="mode-card" data-mode="science"><span>🔬</span><b>理科</b><small>生物・化学・物理・地学</small></button>
-<button class="mode-card" data-mode="social"><span>🗾</span><b>社会</b><small>地理・歴史の中1範囲</small></button>
-<button class="mode-card" data-mode="english"><span>🔤</span><b>英語</b><small>be動詞・一般動詞・疑問文など</small></button>
-</div><div class="features"><span>✓ 大量問題からランダム出題</span><span>✓ 間違いを最後に復習</span><span>✓ 何度でも挑戦</span></div><button id="startAll" class="primary wide">五教科総合テストを開始</button></div></section>
-<section id="quizScreen" class="screen"><div class="quiz-top"><div><span id="categoryLabel">総合</span><span id="questionNo"></span></div><div id="scoreLive">0点</div></div><div class="progress"><div id="progressBar"></div></div><div class="card question-card"><div class="question-tag" id="difficulty">標準</div><h2 id="questionText"></h2><div id="choices" class="choices"></div><div id="feedback" class="feedback hidden"></div><div class="actions"><button id="nextButton" class="primary" disabled>次の問題</button><button id="quitButton" class="ghost">終了</button></div></div></section>
-<section id="resultScreen" class="screen"><div class="card result-card"><p class="eyebrow">QUIZ COMPLETE</p><h2 id="resultTitle">おつかれさま！</h2><div class="score-ring" id="scoreRing"><span id="resultScore">0</span><small>/ 100</small></div><p id="resultSummary"></p><div class="result-stats"><div><b id="correctCount">0</b><span>正解</span></div><div><b id="totalCount">0</b><span>問題</span></div><div><b id="accuracy">0%</b><span>正答率</span></div></div><div id="mistakeReview" class="review"></div><div class="actions center"><button id="retryButton" class="primary">もう一度</button><button id="homeButton" class="ghost">メニューへ</button></div></div></section>
-</main><script src="script.js"></script></body></html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>中1 五教科クエスト</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+<header class="hero">
+  <div>
+    <p class="eyebrow">JUNIOR HIGH 1 · FIVE SUBJECTS</p>
+    <h1>📚 中1 五教科クエスト</h1>
+    <p class="lead">教科を選び、さらに単元を選択。大量の問題からランダムに出題して、苦手な分野を重点的に復習できます。</p>
+  </div>
+  <div class="best-score" id="bestScore">最高得点：—</div>
+</header>
+
+<section id="homeScreen" class="screen active">
+  <div class="card">
+    <div class="section-heading"><div><h2>まず教科を選ぼう</h2><p>教科ページから単元別に進めます。</p></div></div>
+    <div id="subjectGrid" class="subject-grid"></div>
+    <div class="features"><span>✓ 中1主要単元</span><span>✓ 120問以上の問題バンク</span><span>✓ 単元別ランダム出題</span><span>✓ 間違い復習</span></div>
+    <button id="startAll" class="primary wide">🎯 五教科総合から始める</button>
+  </div>
+</section>
+
+<section id="unitScreen" class="screen">
+  <div class="card">
+    <div class="unit-head">
+      <button id="backHome" class="ghost">← 教科一覧</button>
+      <div class="subject-title"><span id="subjectIcon"></span><div><h2 id="subjectName"></h2><p id="subjectDescription"></p></div></div>
+    </div>
+    <div id="unitGrid" class="unit-grid"></div>
+  </div>
+</section>
+
+<section id="quizScreen" class="screen">
+  <div class="quiz-top">
+    <div><span id="categoryLabel">総合</span><span id="questionNo"></span></div>
+    <div id="scoreLive">0問正解</div>
+  </div>
+  <div class="progress"><div id="progressBar"></div></div>
+  <div class="card question-card">
+    <div class="question-meta"><span class="question-tag" id="difficulty">標準</span><span class="unit-tag" id="unitLabel"></span></div>
+    <h2 id="questionText"></h2>
+    <div id="choices" class="choices"></div>
+    <div id="feedback" class="feedback hidden"></div>
+    <div class="actions"><button id="nextButton" class="primary" disabled>次の問題</button><button id="quitButton" class="ghost">終了</button></div>
+  </div>
+</section>
+
+<section id="resultScreen" class="screen">
+  <div class="card result-card">
+    <p class="eyebrow">QUIZ COMPLETE</p>
+    <h2 id="resultTitle">おつかれさま！</h2>
+    <div class="score-ring" id="scoreRing"><span id="resultScore">0</span><small>/ 100</small></div>
+    <p id="resultSummary"></p>
+    <div class="result-stats"><div><b id="correctCount">0</b><span>正解</span></div><div><b id="totalCount">0</b><span>問題</span></div><div><b id="accuracy">0%</b><span>正答率</span></div></div>
+    <div id="mistakeReview" class="review"></div>
+    <div class="actions center"><button id="retryButton" class="primary">もう一度</button><button id="resultHomeButton" class="ghost">教科一覧へ</button></div>
+  </div>
+</section>
+</main>
+<script src="quiz-data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
