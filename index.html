@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>中1 五教科クエスト</title>
-<link rel="stylesheet" href="style.css?v=20260824-2">
+<link rel="stylesheet" href="style.css?v=20260824-3">
 </head>
 <body>
 <main class="app">
@@ -15,16 +15,21 @@
   <div>
     <p class="eyebrow">JUNIOR HIGH 1 · FIVE SUBJECTS</p>
     <h1>📚 中1 五教科クエスト</h1>
-    <p class="lead">教科を選び、さらに単元を選択。大量の問題からランダムに出題して、苦手な分野を重点的に復習できます。</p>
+    <p class="lead">教科・単元・用語を選びながら、中学1年生の内容を問題と解説でじっくり復習できます。</p>
   </div>
   <div class="best-score" id="bestScore">最高得点：—</div>
 </header>
 
 <section id="homeScreen" class="screen active">
   <div class="card">
-    <div class="section-heading"><div><h2>まず教科を選ぼう</h2><p>教科ページから単元別に進めます。</p></div></div>
+    <div class="section-heading">
+      <div><h2>まず教科を選ぼう</h2><p>問題だけでなく、専門用語の確認もできます。</p></div>
+    </div>
     <div id="subjectGrid" class="subject-grid"></div>
-    <div class="features"><span>✓ 中1主要単元</span><span>✓ 大量の問題バンク</span><span>✓ 単元別ランダム出題</span><span>✓ 間違い復習</span></div>
+    <div class="home-tools">
+      <button id="openGlossary" class="tool-card"><span>📘</span><b>用語・解説</b><small>中1で出てくる重要語を教科・単元ごとに確認</small></button>
+    </div>
+    <div class="features"><span>✓ 中1主要単元</span><span>✓ 大量の問題バンク</span><span>✓ 単元別ランダム出題</span><span>✓ 問題中の用語解説</span></div>
     <button id="startAll" class="primary wide">🎯 五教科総合から始める</button>
   </div>
 </section>
@@ -39,6 +44,22 @@
   </div>
 </section>
 
+<section id="glossaryScreen" class="screen">
+  <div class="card glossary-card">
+    <div class="glossary-head">
+      <button id="glossaryHome" class="ghost">← 教科一覧</button>
+      <div><h2>📘 用語・解説</h2><p>教科・単元を選んで重要語をまとめて確認できます。</p></div>
+    </div>
+    <div class="glossary-controls">
+      <select id="glossarySubject"><option value="all">五教科すべて</option></select>
+      <select id="glossaryUnit"><option value="all">すべての単元</option></select>
+      <input id="glossarySearch" type="search" placeholder="用語・読み・説明を検索">
+    </div>
+    <div id="glossaryCount" class="glossary-count"></div>
+    <div id="glossaryList" class="glossary-list"></div>
+  </div>
+</section>
+
 <section id="quizScreen" class="screen">
   <div class="quiz-top">
     <div><span id="categoryLabel">総合</span><span id="questionNo"></span></div>
@@ -48,6 +69,12 @@
   <div class="card question-card">
     <div class="question-meta"><span class="question-tag" id="difficulty">標準</span><span class="unit-tag" id="unitLabel"></span></div>
     <h2 id="questionText"></h2>
+    <div class="question-tools">
+      <button id="showTermsButton" class="term-button">📘 この問題の用語を見る</button>
+      <button id="showHintButton" class="hint-button">💡 ポイントを見る</button>
+    </div>
+    <div id="termPanel" class="term-panel hidden"></div>
+    <div id="hintPanel" class="hint-panel hidden"></div>
     <div id="choices" class="choices"></div>
     <div id="feedback" class="feedback hidden"></div>
     <div class="actions"><button id="nextButton" class="primary" disabled>次の問題</button><button id="quitButton" class="ghost">終了</button></div>
@@ -66,10 +93,11 @@
   </div>
 </section>
 </main>
-<script src="quiz-data.js?v=20260824-2"></script>
-<script src="data-bridge.js?v=20260824-2"></script>
-<script src="question-bank.js?v=20260824-2"></script>
-<script src="question-bank-fix.js?v=20260824-2"></script>
-<script src="script.js?v=20260824-2"></script>
+<script src="quiz-data.js?v=20260824-3"></script>
+<script src="data-bridge.js?v=20260824-3"></script>
+<script src="question-bank.js?v=20260824-3"></script>
+<script src="question-bank-fix.js?v=20260824-3"></script>
+<script src="glossary-data.js?v=20260824-3"></script>
+<script src="script.js?v=20260824-3"></script>
 </body>
 </html>
