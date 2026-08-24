@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>植物分類クエスト</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">中1理科・植物のまとめ</p>
+        <h1>🌱 植物分類クエスト</h1>
+        <p class="lead">花のつくり、植物の分類、単子葉類・双子葉類、シダ植物・コケ植物をクイズで復習しよう。</p>
+      </div>
+      <div class="best-score" id="bestScore">最高得点：—</div>
+    </header>
+
+    <section id="homeScreen" class="screen active">
+      <div class="card intro">
+        <h2>遊び方</h2>
+        <div class="mode-grid">
+          <button class="mode-card" data-mode="all"><span>🧪</span><b>総合テスト</b><small>植物の範囲をまとめて出題</small></button>
+          <button class="mode-card" data-mode="flower"><span>🌸</span><b>花のつくり</b><small>がく・花弁・おしべ・めしべ</small></button>
+          <button class="mode-card" data-mode="classification"><span>🌿</span><b>分類マスター</b><small>被子・裸子・シダ・コケ</small></button>
+          <button class="mode-card" data-mode="mono"><span>🌾</span><b>単子葉 vs 双子葉</b><small>子葉・葉脈・根など</small></button>
+        </div>
+        <div class="features">
+          <span>✓ 問題をランダム出題</span><span>✓ 何度でも挑戦</span><span>✓ 最後に得点・正答率</span>
+        </div>
+        <button id="startAll" class="primary wide">総合テストを開始</button>
+      </div>
+    </section>
+
+    <section id="quizScreen" class="screen">
+      <div class="quiz-top">
+        <div><span id="categoryLabel">総合テスト</span><span id="questionNo"></span></div>
+        <div><span id="scoreLive">0点</span></div>
+      </div>
+      <div class="progress"><div id="progressBar"></div></div>
+      <div class="card question-card">
+        <div class="question-tag" id="difficulty">標準</div>
+        <h2 id="questionText"></h2>
+        <div id="choices" class="choices"></div>
+        <div id="feedback" class="feedback hidden"></div>
+        <div class="actions">
+          <button id="nextButton" class="primary" disabled>次の問題</button>
+          <button id="quitButton" class="ghost">終了</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen">
+      <div class="card result-card">
+        <p class="eyebrow">QUIZ COMPLETE</p>
+        <h2 id="resultTitle">おつかれさま！</h2>
+        <div class="score-ring"><span id="resultScore">0</span><small>/ 100</small></div>
+        <p id="resultSummary"></p>
+        <div class="result-stats">
+          <div><b id="correctCount">0</b><span>正解</span></div>
+          <div><b id="totalCount">0</b><span>問題</span></div>
+          <div><b id="accuracy">0%</b><span>正答率</span></div>
+        </div>
+        <div id="mistakeReview" class="review"></div>
+        <div class="actions center">
+          <button id="retryButton" class="primary">もう一度</button>
+          <button id="homeButton" class="ghost">メニューへ</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
